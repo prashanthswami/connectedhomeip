@@ -50,7 +50,9 @@ jobs:
             - name: Build Compile Commands
               run: |
                 scripts/build/gn_gen.sh --args="is_debug=true is_clang=true" --export-compile-commands
-                scripts/build/gn_build.sh
+                ls -lah
+                tree
+                #scripts/build/gn_build.sh
             - name: Run Include What You Use
               uses: EmilGedda/include-what-you-use-action@v1.0
               with:
