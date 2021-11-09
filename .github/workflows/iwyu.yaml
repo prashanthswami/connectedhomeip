@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Lint Code Base
+name: Verify Include What You Use
 on:
     push:
     pull_request:
@@ -28,21 +28,18 @@ jobs:
     if: github.actor != 'restyled-io[bot]'
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Check broken links
-        # On-push disabled until the job can run fully green
-        # At that point the step should be enabled.
-        if: github.event_name == 'workflow_dispatch'
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
-
-      # git grep exits with 0 if it finds a match, but we want
-      # to fail (exit nonzero) on match.  And we wasnt to exclude this file,
-      # to avoid our grep regexp matching itself.
-      - name: Check for incorrect error use in VerifyOrExit
-        run: |
-          git grep -n "VerifyOrExit(.*, [A-Za-z]*_ERROR" -- './*' ':(exclude).github/workflows/lint.yml' && exit 1 || exit 0
-
-      # Comments like '{{! ... }}' should be used in zap files
-      - name: Do not allow TODO in generated files
-        run: |
-          git grep -n 'TODO:' -- ./zzz_generated './*/zap-generated/*' && exit 1 || exit 0
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+            submodules: true
+      - name: Bootstrap
+        timeout-minutes: 10
+        run: scripts/build/gn_bootstrap.sh
+      - name: Setup Build
+        run: scripts/build/gn_gen.sh --args="chip_config_memory_debug_checks=true chip_config_memory_debug_dmalloc=true" --export-compile-commands
+      - name: Run Include What You Use
+        uses: EmilGedda/include-what-you-use-action@v1
+        with:
+            compilation-database-path: 'out/'
+            output-format: 'iwyu'
+            no-error: 'false'
