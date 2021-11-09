@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Verify Include What You Use
+name: Check Include What You Use
+
 on:
     push:
     pull_request:
@@ -23,23 +24,34 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-  code-lints:
-    runs-on: ubuntu-latest
-    if: github.actor != 'restyled-io[bot]'
+    iwyu_linux:
+        name: IWYU on Linux (gcc_release, clang, mbedtls)
+        timeout-minutes: 60
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-            submodules: true
-      - name: Bootstrap
-        timeout-minutes: 10
-        run: scripts/build/gn_bootstrap.sh
-      - name: Setup Build
-        run: scripts/build/gn_gen.sh --args="chip_config_memory_debug_checks=true chip_config_memory_debug_dmalloc=true" --export-compile-commands
-      - name: Run Include What You Use
-        uses: EmilGedda/include-what-you-use-action@v1.0
-        with:
-            compilation-database-path: 'out/'
-            output-format: 'iwyu'
-            no-error: 'false'
+        runs-on: ubuntu-latest
+        if: github.actor != 'restyled-io[bot]'
+
+        container:
+            image: connectedhomeip/chip-build:latest
+            volumes:
+                - "/tmp/log_output:/tmp/test_logs"
+            options:
+                --sysctl "net.ipv6.conf.all.disable_ipv6=0
+                net.ipv4.conf.all.forwarding=1 net.ipv6.conf.all.forwarding=1"
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
+              with:
+                  submodules: true
+            - name: Bootstrap
+              timeout-minutes: 10
+              run: scripts/build/gn_bootstrap.sh
+            - name: Build Compile Commands
+              run: scripts/build/gn_gen.sh --args="is_debug=true is_clang=true chip_crypto=mbedtls" --export-compile-commands
+            - name: Run Include What You Use
+              uses: EmilGedda/include-what-you-use-action@v1.0
+              with:
+                  compilation-database-path: 'out/'
+                  output-format: 'iwyu'
+                  no-error: 'false'
