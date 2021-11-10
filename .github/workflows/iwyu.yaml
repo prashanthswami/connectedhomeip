@@ -50,7 +50,7 @@ jobs:
             - name: Build Compile Commands
               run: |
                 scripts/build/gn_gen.sh --args="is_debug=true is_clang=true" --export-compile-commands
-                sed -i 's/"directory": .*/"directory": "${{ github.workspace }}",/g' out/compile_commands.json
+                sed -i 's/"directory": .*/"directory": "\/home\/runner\/work\/connectedhomeip\/connectedhomeip\/out",/g' out/compile_commands.json
                 head out/compile_commands.json
                 #scripts/build/gn_build.sh
             - name: Run Include What You Use
