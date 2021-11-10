@@ -51,6 +51,7 @@ jobs:
               run: |
                 scripts/build/gn_gen.sh --args="is_debug=true is_clang=true" --export-compile-commands
                 mkdir -p ${{ github.workspace }} && cp out/compile_commands.json ${{ github.workspace }}
+                ls -lah ${{ github.workspace }}
                 #scripts/build/gn_build.sh
             - name: Run Include What You Use
               uses: EmilGedda/include-what-you-use-action@v1.0
